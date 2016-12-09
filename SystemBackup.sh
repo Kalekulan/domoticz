@@ -1,10 +1,12 @@
 #!/bin/bash
 
-#arg1 output path
+#arg1 mode
+#arg2 output path
 
 
 mountOutputPath="/var/systembackup/mountOutput.txt"
-rsyncOutputPath=$1
+mode=${1,,}
+rsyncOutputPath=$2
 #rsyncOutputPath="/mnt/STORAGE_ee7e0/owncloud_backup"
 drive="STORAGE_ee7e0"
 date=$(date +\%Y\%m\%d)
@@ -27,17 +29,26 @@ then
         fi
 fi
 #echo Kill server
-service domoticz.sh stop
+#service domoticz.sh stop
+/home/www/domoticz/domoticz.sh stop
 #echo $drive is mounted... Executing rsync command.
-rsync -aAxXq --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
-#echo Putting it in a tar...
-tar -cvpzf $rsyncOutputPath/domoticz_backup_$date.tar.gz $rsyncOutputPath/domoticz_rsync_temp
-#echo Taking a dump of mysql database.
-/usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
-#echo Let me zip that for you...
-gzip -f9 $rsyncOutputPath/domoticz_dbbackup_$date.sql # > /mnt/STORAGE_ee7e0/owncloud_backup/owncloud_dbbackup_$(date +\%Y\%m\%d).sql.gz
+
+if [ '$mode' == 'full' ] || [ '$mode' == 'system' ]
+then
+	rsync -aAxXq --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
+	#echo Putting it in a tar...
+	tar -cvpzf $rsyncOutputPath/domoticz_backup_$date.tar.gz $rsyncOutputPath/domoticz_rsync_temp
+fi
+
+if [ '$mode' == 'full' ] || [ '$mode' == 'db' ]
+then
+	#echo Taking a dump of mysql database.
+	/usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
+	#echo Let me zip that for you...
+	gzip -f9 $rsyncOutputPath/domoticz_dbbackup_$date.sql # > /mnt/STORAGE_ee7e0/owncloud_backup/owncloud_dbbackup_$(date +\%Y\%m\%d).sql.gz
+fi
 #echo Start server again.
-service domoticz.sh start
+/home/www/domoticz/domoticz.sh start
 #echo Script is done!
 
 
