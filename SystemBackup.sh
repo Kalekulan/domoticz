@@ -6,64 +6,69 @@
 
 mountOutputPath="/var/systembackup/mountOutput.txt"
 mode=${1,,}
+echo $mode
+size=${#mode}
+echo $mode
 rsyncOutputPath=$2
 #rsyncOutputPath="/mnt/STORAGE_ee7e0/owncloud_backup"
 drive="STORAGE_ee7e0"
 date=$(date +\%Y\%m\%d)
-DOMO_IP=""  # Domoticz IP 
-DOMO_PORT=""        # Domoticz port 
+DOMO_IP="domoticz.local"  # Domoticz IP
+DOMO_PORT="8080"        # Domoticz port
 
 > $mountOutputPath
 mount | grep $drive > $mountOutputPath
 
-#echo Checking if $drive is mounted...
+echo Checking if $drive is mounted...
 if [ ! -s $mountOutputPath ]
 then
-        #echo $drive is not mounted. I'll give it a shot...
+#        echo $drive is not mounted. I'll give it a shot...
         mount --all
         mount | grep $drive > $mountOutputPath
         if [ ! -s $mountOutputPath ]
         then
-                #echo Still can't mount. Check connection... Bye.
+#                echo Still can't mount. Check connection... Bye.
                 exit
         fi
 fi
 #echo Kill server
-#service domoticz.sh stop
-/home/www/domoticz/domoticz.sh stop
 #echo $drive is mounted... Executing rsync command.
 
-if [ '$mode' == 'full' ] || [ '$mode' == 'system' ]
+if [ $mode = 'full' ] || [ $mode = 'system' ]
 then
-	rsync -aAxXq --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
-	#echo Putting it in a tar...
-	tar -cvpzf $rsyncOutputPath/domoticz_backup_$date.tar.gz $rsyncOutputPath/domoticz_rsync_temp
+        #service domoticz.sh stop
+        /etc/init.d/domoticz.sh stop
+        rsync -aAxXq --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
+        #echo Putting it in a tar...
+        tar -cvpzf $rsyncOutputPath/domoticz_backup_$date.tar.gz $rsyncOutputPath/domoticz_rsync_temp
 fi
 
-if [ '$mode' == 'full' ] || [ '$mode' == 'db' ]
+if [ $mode = 'full' ] || [ $mode = 'db' ]
 then
-	#echo Taking a dump of mysql database.
-	/usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
-	#echo Let me zip that for you...
-	gzip -f9 $rsyncOutputPath/domoticz_dbbackup_$date.sql # > /mnt/STORAGE_ee7e0/owncloud_backup/owncloud_dbbackup_$(date +\%Y\%m\%d).sql.gz
+        echo Start server again.
+        /etc/init.d/domoticz.sh start
+        echo Taking a dump of mysql database.
+        /usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
+        echo Let me zip that for you...
+        gzip -f9 $rsyncOutputPath/domoticz_dbbackup_$date.sql # > /mnt/STORAGE_ee7e0/owncloud_backup/owncloud_dbbackup_$(date +\%Y\%m\%d).sql.gz
 fi
-#echo Start server again.
-/home/www/domoticz/domoticz.sh start
-#echo Script is done!
+echo Start server again.
+/etc/init.d/domoticz.sh start
+echo Script is done!
 
 
     #!/bin/bash
-	# I'M NOT THE AUTHOR OF THIS SCRIPT. ALL CODE BELONGS TO DOMOTICZ!
-	#
-	#
-	
+        # I'M NOT THE AUTHOR OF THIS SCRIPT. ALL CODE BELONGS TO DOMOTICZ!
+        #
+        #
+
     # LOCAL/FTP/SCP/MAIL PARAMETERS
 #    SERVER="192.168.0.10"   # IP of Network disk, used for ftp
  #   USERNAME="root"         # FTP username of Network disk used for ftp
   #  PASSWORD="root"         # FTP password of Network disk used for ftp
    # DESTDIR="/opt/backup"   # used for temorarily storage
-#    DOMO_IP="192.168.0.90"  # Domoticz IP 
-#    DOMO_PORT="8080"        # Domoticz port 
+#    DOMO_IP="192.168.0.90"  # Domoticz IP
+#    DOMO_PORT="8080"        # Domoticz port
     ### END OF USER CONFIGURABLE PARAMETERS
 #    TIMESTAMP=`/bin/date +%Y%m%d%H%M%S`
 #    BACKUPFILE="domoticz_$TIMESTAMP.db" # backups will be named "domoticz_YYYYMMDDHHMMSS.db.gz"
@@ -74,7 +79,7 @@ fi
 #    service domoticz.sh start
 #    gzip -9 /tmp/$BACKUPFILE
     ### Send to Network disk through FTP
-#    curl -s --disable-epsv -v -T"/tmp/$BACKUPFILEGZ" -u"$USERNAME:$PASSWORD" "ftp://$SERVER/media/hdd/Domoticz_backup/"				
+#    curl -s --disable-epsv -v -T"/tmp/$BACKUPFILEGZ" -u"$USERNAME:$PASSWORD" "ftp://$SERVER/media/hdd/Domoticz_backup/"
     ### Remove temp backup file
  #   /bin/rm /tmp/$BACKUPFILEGZ
     ### Done!
