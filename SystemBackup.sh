@@ -46,7 +46,7 @@ fi
 if [ $mode = 'full' ] || [ $mode = 'db' ]
 then
         echo Start server again.
-        /etc/init.d/domoticz.sh start
+        sudo /etc/init.d/domoticz.sh start
         echo Taking a dump of mysql database.
         /usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
         echo Let me zip that for you...
