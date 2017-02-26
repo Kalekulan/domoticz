@@ -23,37 +23,42 @@ echo Checking if $drive is mounted...
 if [ ! -s $mountOutputPath ]
 then
 #        echo $drive is not mounted. I'll give it a shot...
-        mount --all
-        mount | grep $drive > $mountOutputPath
-        if [ ! -s $mountOutputPath ]
-        then
+  mount --all
+  mount | grep $drive > $mountOutputPath
+  if [ ! -s $mountOutputPath ]
+  then
 #                echo Still can't mount. Check connection... Bye.
-                exit
-        fi
+    exit
+  fi
 fi
 #echo Kill server
 #echo $drive is mounted... Executing rsync command.
 
 if [ $mode = 'full' ] || [ $mode = 'system' ]
 then
-        #service domoticz.sh stop
-        /etc/init.d/domoticz.sh stop
-        rsync -aAxXq --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
-        #echo Putting it in a tar...
-        tar -cvpzf $rsyncOutputPath/domoticz_backup_$date.tar.gz $rsyncOutputPath/domoticz_rsync_temp
+  #service domoticz.sh stop
+  /etc/init.d/domoticz.sh stop
+  /etc/init.d/homebridge stop
+  rsync -aAxXq --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
+  #echo Putting it in a tar...
+  tar -cvpzf $rsyncOutputPath/domoticz_backup_$date.tar.gz $rsyncOutputPath/domoticz_rsync_temp
+  echo Start server again.
+  /etc/init.d/domoticz.sh start
+  /etc/init.d/homebridge start
 fi
 
 if [ $mode = 'full' ] || [ $mode = 'db' ]
 then
-        echo Start server again.
-        sudo /etc/init.d/domoticz.sh start
-        echo Taking a dump of mysql database.
-        /usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
-        echo Let me zip that for you...
-        gzip -f9 $rsyncOutputPath/domoticz_dbbackup_$date.sql # > /mnt/STORAGE_ee7e0/owncloud_backup/owncloud_dbbackup_$(date +\%Y\%m\%d).sql.gz
+  pid=(pidof domoticz)
+  echo Domoticz PID=$pid
+  if [$pid = 0]; echo Domoticz server is running. #pid exists
+  else; /etc/init.d/domoticz.sh start
+  echo Taking a dump of mysql database.
+  /usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
+  echo Let me zip that for you...
+  gzip -f9 $rsyncOutputPath/domoticz_dbbackup_$date.sql # > /mnt/STORAGE_ee7e0/owncloud_backup/owncloud_dbbackup_$(date +\%Y\%m\%d).sql.gz
 fi
-echo Start server again.
-/etc/init.d/domoticz.sh start
+
 echo Script is done!
 
 
