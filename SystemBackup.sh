@@ -50,15 +50,15 @@ fi
 if [ $mode = 'full' ] || [ $mode = 'db' ]
 then
   #  pid=$(pidof domoticz)
-    pid=$(/bin/pidof domoticz)
-    pidExitCode=$?
-    echo Domoticz PID=$pid
-    if [ $pidExitCode == 0 ]; then
-      echo Domoticz server is running. #pid exists
-    else
-      /etc/init.d/domoticz.sh start
-      sleep 10
-    fi
+  pid=$(/bin/pidof domoticz)
+  pidExitCode=$?
+  echo Domoticz PID=$pid
+  if [ $pidExitCode == 0 ]; then
+    echo Domoticz server is running. #pid exists
+  else
+    /etc/init.d/domoticz.sh start
+    sleep 10
+  fi
   echo Taking a dump of mysql database.
   /usr/bin/curl -s http://$DOMO_IP:$DOMO_PORT/backupdatabase.php > $rsyncOutputPath/domoticz_dbbackup_$date.sql
   echo Let me zip that for you...
