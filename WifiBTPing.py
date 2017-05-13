@@ -64,8 +64,8 @@ args = ParseArguments()
 
 pinger = Pinger( args.dIP, \
         args.name, \
-        args.idx, \
         args.ip, \
+        args.idx, \
         args.mac, \
         args.interval
 )
@@ -74,16 +74,18 @@ def WiFiPing():
     cmd="fping -c1 -b 32 -t1000 " + str(pinger.ipadr) + " 2>/dev/null 1>/dev/null"
     print("Pinging ip adress " + str(pinger.ipadr))
     #subprocess.run("fping", "-c1", "-b", "32", "-t1000", pinger.ipadr, "/dev/null")
-    fping = Popen(["fping", "-c1", "-b", "32", "-t1000", pinger.ipadr, stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=-1)
+    fping = Popen(["fping", "-c1", "-b", "32", "-t1000", pinger.ipadr], stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=-1)
+    #fping = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     output, error = fping.communicate()
-    time.sleep(1)
-    print("With return code " + fping.returncode)
+    sleep(1)
+    print("With return code " + str(fping.returncode))
     return fping.returncode
 
 def BTPing():
     print("Pinging bluetooth mac adress " + str(pinger.btMacAdr))
-    l2ping = subprocess.Popen.wait(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print("With return code " + l2ping.returncode)
+    l2ping = Popen(["l2ping", "-c1", "-s32", "-t1", pinger.btMacAdr, "/dev/null"], stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=-1)
+    output, error = l2ping.communicate()
+    print("With return code " + str(l2ping.returncode))
     #subprocess.run("l2ping", "-c1", "-s32", "-t1", pinger.btMacAdr, "/dev/null")
     return l2ping.returncode
 
@@ -91,18 +93,20 @@ def CheckDomoticz():
     print("Checking Domoticz")
     cmd="curl -s http://" + str(pinger.dIP) + "/json.htm?type=devices&rid=" + pinger.idx
     #subprocess.run("curl", "-s", "http://" + pinger.dIP +"/json.htm?type=devices&rid=" + pinger.idx)#, "|", "grep", "'"Data" :'"", "|", "awk", "'{ print $3 }'", "|", "sed", "'s/[!@#\$%",^&*()]//g'")
-    curl = subprocess.Popen.wait(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print("With return code " + curl.returncode)
+    chkcurl = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=-1)
+    output, error = chkcurl.communicate()
+    print("With return code " + str(chkcurl.returncode))
     #std_out, std_err = pipes.communicate()
-    return curl.returncode
+    return chkcurl.returncode
 
 def UpdateDomoticz(state):
     print("Updating Domoticz")
-    cmd="curl -s http://" + parser.dIP + "/json.htm?type=command&param=switchlight&idx=" + parser.idx + "&switchcmd=" + state + "2>/dev/null"
-    curl = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print("With return code " + curl.returncode)
+    cmd="curl -s http://" + pinger.dIP + "/json.htm?type=command&param=switchlight&idx=" + pinger.idx + "&switchcmd=" + state + "2>/dev/null"
+    updcurl = subprocess.Popen(["curl", "-s", "http://" + parser.dIP + "/json.htm?type=command&param=switchlight&idx=" + pinger.idx + "&switchcmd=" + state, "2>/dev/null"], stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=-1)
+    output, error = updcurl.communicate()
+    print("With return code " + str(updcurl.returncode))
     #std_out, std_err = pipes.communicate()
-    return curl.returncode
+    return updcurl.returncode
 
 while True:
     #if args.ip is not None: wifiResult = pinger.WiFiPing
@@ -110,7 +114,7 @@ while True:
 
     if args.ip is not None: wifiResult = WiFiPing()
     if args.mac is not None: btResult = BTPing()
-    chkResult = CheckDomoticz()
+    #chkResult = CheckDomoticz()
     updResult = UpdateDomoticz('On')
     #if wifiResult or
-    #time.sleep(pinger.interval)
+    #sleep(pinger.interval)
