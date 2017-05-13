@@ -4,7 +4,7 @@
 #arg2 output path
 
 
-mountOutputPath="/var/systembackup/mountOutput.txt"
+#mountOutputPath="/var/systembackup/mountOutput.txt"
 mode=${1,,}
 echo $mode
 size=${#mode}
@@ -16,18 +16,18 @@ date=$(date +\%Y\%m\%d)
 DOMO_IP="domoticz.local"  # Domoticz IP
 DOMO_PORT="8080"        # Domoticz port
 
-> $mountOutputPath
-mount | grep $drive > $mountOutputPath
+#> $mountOutputPath
+#mount | grep $drive > $mountOutputPath
 
 echo Checking if $drive is mounted...
-if [ ! -s $mountOutputPath ]
-then
-#        echo $drive is not mounted. I'll give it a shot...
+#if [ ! -s $mountOutputPath ]
+if ! mount | grep $drive ; then
+  echo $drive is not mounted. I will give it a shot...
   mount --all
-  mount | grep $drive > $mountOutputPath
-  if [ ! -s $mountOutputPath ]
-  then
-#                echo Still can't mount. Check connection... Bye.
+  #mount | grep $drive > $mountOutputPath
+  #if [ ! -s $mountOutputPath ]
+  if ! mount | grep $drive ; then
+    echo Still cant mount. Check connection... Bye.
     exit
   fi
 fi
@@ -39,7 +39,7 @@ then
   #service domoticz.sh stop
   /etc/init.d/domoticz.sh stop
   /etc/init.d/homebridge stop
-  rsync -aAxXq --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
+  rsync -aAxXql --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
   #echo Putting it in a tar...
   tar -cvpzf $rsyncOutputPath/domoticz_backup_$date.tar.gz $rsyncOutputPath/domoticz_rsync_temp
   echo Start server again.
