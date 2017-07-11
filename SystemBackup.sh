@@ -3,15 +3,15 @@
 #arg1 mode
 #arg2 output path
 
-mode = ${1,,}
+mode=${1,,}
 echo $mode
-size = ${#mode}
+size=${#mode}
 echo $mode
-rsyncOutputPath = $2
-drive = "STORAGE_ee7e0"
-date = $(date +\%Y\%m\%d)
-DOMO_IP = "domoticz.local"  # Domoticz IP
-DOMO_PORT = "8080"        # Domoticz port
+rsyncOutputPath=$2
+drive="STORAGE_ee7e0"
+date=$(date +\%Y\%m\%d)
+DOMO_IP="domoticz.local"  # Domoticz IP
+DOMO_PORT="8080"        # Domoticz port
 
 echo Checking if $drive is mounted...
 
@@ -26,7 +26,7 @@ fi
 #echo Kill server
 #echo $drive is mounted... Executing rsync command.
 
-if [ $mode = 'full' ] || [ $mode = 'system' ]; then
+if [ $mode='full' ] || [ $mode='system' ]; then
     /etc/init.d/domoticz.sh stop
     /etc/init.d/homebridge stop
     rsync -aAxXql --exclude-from=/var/rsync/rsyncExclusions.list /* $rsyncOutputPath/domoticz_rsync_temp
@@ -37,11 +37,11 @@ if [ $mode = 'full' ] || [ $mode = 'system' ]; then
     /etc/init.d/homebridge start
 fi
 
-if [ $mode = 'full' ] || [ $mode = 'db' ]; then
+if [ $mode='full' ] || [ $mode='db' ]; then
     #  pid=$(pidof domoticz)
-    pid = $(/bin/pidof domoticz)
-    pidExitCode = $?
-    echo Domoticz PID = $pid
+    pid=$(/bin/pidof domoticz)
+    pidExitCode=$?
+    echo Domoticz PID=$pid
     if [ $pidExitCode == 0 ]; then
         echo Domoticz server is running. #pid exists
     else
