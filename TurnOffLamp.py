@@ -8,8 +8,7 @@ import logging as log
 
 def send_cmd(process, idx, state):
     ""
-    # http://domoticz.local:8080/json.htm?type=command&param=switchlight&idx=13&switchcmd=Off&level=0&passcode=
-    url = ('http://domoticz.local:8080/json.htm?type=command&param=switchlight&idx='
+    url = ('http://YOUR.URL:PORT/json.htm?type=command&param=switchlight&idx='
            + idx
            + '&switchcmd='
            + state
