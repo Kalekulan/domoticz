@@ -15,6 +15,11 @@ DOMO_PORT="8080"        # Domoticz port
 
 echo Checking if $drive is mounted...
 
+if [ -z "$rsyncOutputPath" ] || [ -z "$mode" ]; then
+    echo Not all arguments were supplied
+    exit
+fi
+
 if ! mount | grep $drive ; then
     echo $drive is not mounted. I will give it a shot...
     mount --all
